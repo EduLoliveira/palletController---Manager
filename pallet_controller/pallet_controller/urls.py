@@ -46,6 +46,10 @@ urlpatterns = [
     path('vales/remover/<int:id>/', views.staff_required(views.valepallet_remover), name='valepallet_remover'),
     path('valepallet/processar/<int:id>/<str:hash_seguranca>/', views.staff_required(views.processar_scan), name='valepallet_processar'),
 
+    path("vales/documento/<int:doc_id>/remover/", views.valepallet_remover_documento, name="valepallet_remover_documento"),
+    path("vales/<int:vale_id>/upload-documento/", views.valepallet_upload_documento, name="valepallet_upload_documento"),
+    path("vales/<int:vale_id>/detalhes/", views.detalhes_vale, name="detalhes_vale"),
+   
     # MOVIMENTAÇÕES
     path('movimentacoes/', views.staff_required(views.movimentacao_listar), name='movimentacao_listar'),
     path('movimentacoes/filtrar/', views.staff_required(views.movimentacoes_filtrar), name='movimentacoes_filtrar'),

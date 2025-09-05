@@ -71,16 +71,15 @@ WSGI_APPLICATION = 'pallet_controller.wsgi.application'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
 
-
-#Realizar demanda de backend- Utilizar SupaBase como teste.
+AUTH_USER_MODEL = 'app_controller.Usuario'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': '5IEvXIKjw9BN2QOx',
-        'HOST': 'db.zyeaqpsltgavouygatxs.supabase.co',
-        'PORT': '5432',
+        'NAME': 'psql',         # nome do banco
+        'USER': 'ubuntu',          # usuário
+        'PASSWORD': 'db128732EzWW00O',   # senha
+        'HOST': '127.0.0.1',       # ou IP/host do servidor PostgreSQL
+        'PORT': '5432',            # porta padrão do PostgreSQL
     }
 }
 
@@ -115,7 +114,7 @@ PASSWORD_HASHERS = [
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'painel_usuario'
-AUTH_USER_MODEL = 'app_controller.Usuario'
+
 
 
 LANGUAGE_CODE = 'en-us'

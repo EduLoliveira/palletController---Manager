@@ -5,11 +5,11 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.utils.crypto import get_random_string
 from django.db import transaction
-from django.views.decorators.http import require_http_methods, require_GET
+from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.urls import reverse
 from django.utils import timezone
 from django.contrib.auth import authenticate, login as auth_login, logout
-from .models import Cliente, Motorista, Transportadora, ValePallet, Movimentacao, PessoaJuridica, Usuario
+from .models import Cliente, Motorista, Transportadora, ValePallet, Movimentacao, PessoaJuridica, Usuario, DocumentoVale
 from .forms import ClienteForm, MotoristaForm, TransportadoraForm, ValePalletForm, MovimentacaoForm, UsuarioPJForm, PessoaJuridicaForm
 from .utils import generate_qr_code
 import logging
@@ -39,6 +39,38 @@ def staff_required(view_func=None, redirect_url='painel_usuario'):
         return user_passes_test(check_staff, login_url=redirect_url)(view_func)
     return user_passes_test(check_staff, login_url=redirect_url)
 
+
+from django.template.loader import render_to_string
+from weasyprint import HTML
+import tempfile
+from django.shortcuts import get_object_or_404
+from .models import ValePallet
+def valepallet_gerar_documento(request, vale_id, tipo):
+    vale = get_object_or_404(ValePallet, id=vale_id)
+    
+    # Renderiza o template HTML
+    html_string = render_to_string(f'vales/documento_{tipo}.html', {
+        'vale': vale,
+        'user': request.user
+    })
+    
+    # Cria um arquivo PDF
+    html = HTML(string=html_string)
+    result = html.write_pdf()
+    
+    # Cria a resposta HTTP
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="vale_{vale.numero_vale}_{tipo}.pdf"'
+    response['Content-Transfer-Encoding'] = 'binary'
+    
+    # Escreve o PDF na resposta
+    with tempfile.NamedTemporaryFile(delete=True) as output:
+        output.write(result)
+        output.flush()
+        output = open(output.name, 'rb')
+        response.write(output.read())
+    
+    return response
 # ==============================================
 # PÁGINA INICIAL E AUTENTICAÇÃO
 # ==============================================
@@ -806,6 +838,54 @@ def valepallet_remover(request, id):
         messages.error(request, 'Erro ao remover vale pallet')
     return redirect('valepallet_listar')
 
+@login_required
+def detalhes_vale(request, vale_id):
+    vale = get_object_or_404(ValePallet, pk=vale_id)
+    return render(request, "cadastro/valepallet/detalhes.html", {"vale": vale})
+
+@login_required
+@require_POST
+def valepallet_upload_documento(request, id):
+    """Upload de documento para um vale pallet"""
+    vale = get_object_or_404(ValePallet, pk=id)
+
+    if "arquivo" not in request.FILES:
+        messages.error(request, "Nenhum arquivo foi enviado.")
+        return redirect("valepallet_detalhes", id=vale.id)
+
+    arquivo = request.FILES["arquivo"]
+
+    documento = DocumentoVale.objects.create(
+        vale=vale,
+        arquivo=arquivo,
+        nome_original=arquivo.name,
+        usuario=request.user
+    )
+
+    # Atualiza o estado do vale para indicar que já tem documento (VALIDADO)
+    if vale.estado == "EMITIDO":
+        vale.estado = "SAIDA"
+        vale.save()
+
+    messages.success(request, "Documento anexado com sucesso!")
+    return redirect("valepallet_detalhes", id=vale.id)
+
+
+@login_required
+@require_http_methods(["POST"])
+def valepallet_remover_documento(request, id):
+    """Remove documento de um vale pallet"""
+    documento = get_object_or_404(DocumentoVale, pk=id)
+    vale_id = documento.vale.id
+
+    # Verifica permissão: staff ou usuário que enviou
+    if not request.user.is_staff and documento.usuario != request.user:
+        messages.error(request, "Você não tem permissão para remover este documento.")
+        return redirect("valepallet_detalhes", id=vale_id)
+
+    documento.delete()
+    messages.success(request, "Documento removido com sucesso.")
+    return redirect("valepallet_detalhes", id=vale_id)
 
 @transaction.atomic
 @login_required

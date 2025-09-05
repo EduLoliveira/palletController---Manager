@@ -9,8 +9,119 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <title>Gestão de Vales de Pallet</title>
-</head>
+    <style>
+        .documento-container {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.2;
+        }
 
+        .documento-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .documento-table,
+        .documento-table th,
+        .documento-table td {
+            border: 1px solid black;
+        }
+
+        .documento-table th,
+        .documento-table td {
+            padding: 4px 8px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .border-top-bold {
+            border-top: 2px solid black;
+        }
+
+        .mt-3 {
+            margin-top: 1rem;
+        }
+
+        .mb-3 {
+            margin-bottom: 1rem;
+        }
+
+        .assinatura-line {
+            border-top: 1px solid black;
+            margin-top: 60px;
+            padding-top: 5px;
+        }
+
+        .btn-documento {
+            min-width: 120px;
+        }
+
+        /* Estilos para impressão */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            .print-section,
+            .print-section * {
+                visibility: visible;
+            }
+
+            .print-section {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .documento-container {
+                font-size: 12px;
+            }
+
+            .dados-manuais-container {
+                display: none !important;
+            }
+        }
+
+        /* Estilos para os campos de entrada manual */
+        .dados-manuais-container {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .dados-manuais-container .form-label {
+            font-weight: 500;
+        }
+
+        .campo-documento {
+            font-weight: bold;
+            background-color: #fffae0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            border: 1px dashed #ccc;
+        }
+
+        /* Estilo para ajustar a impressão em uma única página */
+        .print-single-page {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+    </style>
+</head>
 
 <body class="d-flex flex-column min-vh-100">
     <!-- Navbar com fontes grandes -->
@@ -141,6 +252,7 @@
                 {% endfor %}
             </div>
             {% endif %}
+
             {% block content %}
             <div class="container-fluid py-4">
                 <div class="card shadow-lg">
@@ -249,45 +361,183 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Histórico de Movimentações -->
-                    <div class="card">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">Histórico de Movimentações</h5>
-                        </div>
-                        <div class="card-body">
-                            {% if vale.movimentacao_set.all %}
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Data/Hora</th>
-                                            <th>Tipo</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for mov in vale.movimentacao_set.all %}
-                                        <tr>
-                                            <td>{{ mov.data_hora|date:"d/m/Y H:i" }}</td>
-                                            <td>
-                                                <span
-                                                    class="badge bg-{% if mov.tipo == 'SCAN' %}info{% elif mov.tipo == 'SAIDA' %}danger{% elif mov.tipo == 'RETORNO' %}success{% else %}primary{% endif %}">
-                                                    {{ mov.get_tipo_display }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
+                        <!-- Histórico de Movimentações (AGORA POSICIONADO ANTES DA DOCUMENTAÇÃO) -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0">Histórico de Movimentações</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        {% if vale.movimentacao_set.all %}
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Data/Hora</th>
+                                                        <th>Tipo</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for mov in vale.movimentacao_set.all %}
+                                                    <tr>
+                                                        <td>{{ mov.data_hora|date:"d/m/Y H:i" }}</td>
+                                                        <td>
+                                                            <span
+                                                                class="badge bg-{% if mov.tipo == 'SCAN' %}info{% elif mov.tipo == 'SAIDA' %}danger{% elif mov.tipo == 'RETORNO' %}success{% else %}primary{% endif %}">
+                                                                {{ mov.get_tipo_display }}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {% else %}
+                                        <div class="alert alert-info">Nenhuma movimentação registrada.</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </div>
-                            {% else %}
-                            <div class="alert alert-info">Nenhuma movimentação registrada.</div>
-                            {% endif %}
+                        </div>
+
+                        <!-- Nova Seção: Documentação do Vale (AGORA POSICIONADA APÓS O HISTÓRICO) -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-file-earmark-text me-2"></i> Documentação do Vale
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+
+                                        {% if user.is_staff %}
+                                        <button class="btn btn-success btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#uploadDocumentoModal">
+                                            <i class="bi bi-upload"></i> Anexar Documento
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="alert alert-info">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            Aqui você pode consultar ou anexar documentos relacionados a este vale.
+                                        </div>
+
+                                        <!-- Listagem de documentos anexados -->
+                                        {% if vale.documentos.exists %}
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Arquivo</th>
+                                                        <th>Data/Hora</th>
+                                                        <th>Usuário</th>
+                                                        <th></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for doc in vale.documentos.all %}
+                                                    <tr>
+                                                        <td>
+                                                            <a href="{{ doc.arquivo.url }}" target="_blank">
+                                                                <i class="bi bi-paperclip"></i> {{ doc.nome_original|default:doc.arquivo.name }}
+                                                            </a>
+                                                        </td>
+                                                        <td>
+                                                            {% if doc.data_upload %}
+                                                            {{ doc.data_upload|date:"d/m/Y H:i" }}
+                                                            {% else %}
+                                                            -
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if doc.usuario %}
+                                                            {{ doc.usuario.username }}
+                                                            {% else %}
+                                                            -
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="text-end">
+                                                            {% if user.is_staff or doc.usuario == user %}
+                                                            <a href="{% url 'valepallet_remover_documento' doc.id %}"
+                                                                class="btn btn-danger btn-sm"
+                                                                onclick="return confirm('Tem certeza que deseja remover este documento?')">
+                                                                <i class="bi bi-trash"></i>
+                                                            </a>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    {% empty %}
+                                                    <tr>
+                                                        <td colspan="4">Nenhum documento anexado.</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+
+                                        </div>
+
+                                        <!-- Badge de validação -->
+                                        <div class="mt-3">
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle"></i> VALIDADO – Documento Anexado
+                                            </span>
+                                        </div>
+                                        {% else %}
+                                        <div class="alert alert-warning">
+                                            Nenhum documento anexado até o momento.
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card h-100">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">Documento de Controle</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <p class="card-text">Documento interno para controle de
+                                                    equipamentos, assinado por motorista e administração.</p>
+                                            </div>
+                                            <div class="card-footer">
+                                                <button class="btn btn-outline-primary w-100 btn-documento"
+                                                    data-bs-toggle="modal" data-bs-target="#documentoControleModal">
+                                                    <i class="bi bi-eye me-1"></i> Visualizar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card h-100">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">Documento do Motorista</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <p class="card-text">Documento para o motorista, necessário para
+                                                    retirada dos equipamentos.</p>
+                                            </div>
+                                            <div class="card-footer">
+                                                <button class="btn btn-outline-primary w-100 btn-documento"
+                                                    data-bs-toggle="modal" data-bs-target="#documentoMotoristaModal">
+                                                    <i class="bi bi-eye me-1"></i> Visualizar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+        </div>
+        {% endblock %}
         </div>
 
         <!-- Modal de Cancelamento -->
@@ -315,12 +565,315 @@
                 </div>
             </div>
         </div>
-        {% endblock %}
+        {% if user.is_staff %}
+        <!-- Modal para Documento de Controle -->
+        <div class="modal fade" id="documentoControleModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">Documento de Controle - Vale #{{ vale.numero_vale }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Formulário para dados manuais -->
+                        <div class="dados-manuais-container no-print mb-4">
+                            <h6 class="mb-3">Preencher dados manualmente:</h6>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label">RG do Motorista</label>
+                                    <input type="text" class="form-control" id="rgMotoristaInput"
+                                        placeholder="Digite o RG do motorista"
+                                        value="{{ vale.motorista.rg|default:'' }}">
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label">Placa do Veículo</label>
+                                    <input type="text" class="form-control" id="placaVeiculoInput"
+                                        placeholder="Digite a placa do veículo"
+                                        value="{{ vale.motorista.placa_veiculo|default:'' }}">
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label">Responsável</label>
+                                    <input type="text" class="form-control" id="responsavelInput"
+                                        placeholder="Digite o nome do responsável">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <label class="form-label">Retirada na Caixaria</label>
+                                    <input type="text" class="form-control" id="retiradaCaixariaInput"
+                                        placeholder="Digite o local de retirada">
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-primary btn-sm" onclick="atualizarDocumento()">
+                                    Atualizar Visualização
+                                </button>
+                            </div>
+                        </div>
 
+                        <div class="documento-container print-section print-single-page" id="documentoControleContent">
+                            <div class="text-center mb-3">
+                                <h4>Grupo E-Pallet</h4>
+                            </div>
 
+                            <div class="d-flex justify-content-between mb-3">
+                                <div>
+                                    <div>{{ vale.data_emissao|date:"d/m/Y" }}</div>
+                                    <p>{{ vale.data_emissao|date:"H:i:s" }}</p>
+                                </div>
+                                <div>
+                                    <div>CENTRAL DE DISTRIBUIÇÃO</div>
+                                    <p>Nr: {{ vale.numero_vale }}/{{ vale.data_emissao|date:"Y" }}</p>
+                                </div>
+                            </div>
+
+                            <div class="text-center mb-3">
+                                <h4>VALE RETIRADA</h4>
+                            </div>
+
+                            <table class="documento-table mb-3">
+                                <tr>
+                                    <td>Fornecedor:</td>
+                                    <td colspan="3">{{ vale.cliente.codigo }} {{ vale.cliente.nome|upper }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Data Validade:</td>
+                                    <td colspan="3">{{ vale.data_emissao|date:"d/m/Y" }} a {{
+                                        vale.data_validade|date:"d/m/Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Retirada na Caixaria:</td>
+                                    <td colspan="3"><span id="retiradaCaixariaText">[A ser preenchido
+                                            manualmente]</span></td>
+                                </tr>
+                            </table>
+                            <br>
+
+                            <table class="documento-table mb-3">
+                                <tr>
+                                    <th>Equipamento</th>
+                                    <th>Quantidade Vale</th>
+                                </tr>
+                                <tr>
+                                    <td>PALLET PBR</td>
+                                    <td>{{ vale.qtd_pbr }}</td>
+                                </tr>
+                                {% if vale.qtd_chepp > 0 %}
+                                <tr>
+                                    <td>PALLET CHEP</td>
+                                    <td>{{ vale.qtd_chepp }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+
+                            <div class="mb-3">
+                                <p>Placa Veículo: <span id="placaVeiculoText">{{
+                                        vale.motorista.placa_veiculo|default:"NÃO INFORMADA" }}</span></p>
+                                <p>Motorista: {{ vale.motorista.nome|upper }}</p>
+                            </div>
+
+                            <div class="mb-3">
+                                <p>Emissao (conf./adm.) Data: {{ vale.data_emissao|date:"d/m/Y" }}</p>
+                                <p>Resp.: <span id="responsavelText"></span></p>
+                            </div>
+
+                            <div class="border-top-bold pt-2 mb-3">
+                                <p><strong>Leia com Atenção:</strong></p>
+                                <ol>
+                                    <li>Este documento tem validade de 180 dias a partir da data de emissao.</li>
+                                    <li>A solicitação da coleta (agendamento) e retirada efetiva do equipamento deve
+                                        ocorrer dentro do período de 180 dias. Não cabe ao fornecedor qualquer
+                                        indenização pelo equipamento não retirado dentro do prazo.</li>
+                                    <li>A retirada dos equipamentos so sera autorizada mediante a apresentação deste
+                                        documento. O extravio deste anula a retirada dos equipamentos.</li>
+                                </ol>
+                            </div>
+
+                            <div class="mb-3">
+                                <p>Para solicitar agendamento dos equipamentos entrar em contato nos canais abaixo</p>
+                                <p>Solicitar agendamento pelo portal no link https://gpabr.service-now.com/esc</p>
+                                <p>Suporte: agendamento.equipamentos@gpabr.com</p>
+                                <p>RJ - Solicitação devera ser direcionada para o e-mail
+                                    agendamentodeequipamentosrj@gpabr.com</p>
+                                <p>Horário de funcionamento do agendamento de segunda a sexta-feira das 09hs as 17:00hs
+                                </p>
+                            </div>
+
+                            <div class="row mt-5">
+                                <div class="col-6">
+                                    <div class="assinatura-line">
+                                        <p class="text-center">Assinatura do Motorista</p>
+                                        <p class="text-center">RG: <span id="rgMotoristaText">{{
+                                                vale.motorista.rg|default:"NÃO INFORMADO" }}</span></p>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="assinatura-line">
+                                        <p class="text-center">Assinatura da Administração</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer no-print">
+                        <button class="btn btn-info" onclick="acionarImpressaoNativa('documentoControleContent')">
+                            <i class="bi bi-printer me-1"></i> Imprimir
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <!-- Modal para Documento do Motorista -->
+        <div class="modal fade" id="documentoMotoristaModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">Documento do Motorista - Vale #{{ vale.numero_vale }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Formulário para dados manuais -->
+                        <div class="dados-manuais-container no-print mb-4">
+                            <h6 class="mb-3">Preencher dados manualmente:</h6>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label">RG do Motorista</label>
+                                    <input type="text" class="form-control" id="rgMotoristaDocInput"
+                                        placeholder="Digite o RG do motorista"
+                                        value="{{ vale.motorista.rg|default:'' }}">
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label">Data de Retirada</label>
+                                    <input type="text" class="form-control" id="dataRetiradaInput"
+                                        placeholder="Digite a data de retirada">
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-primary btn-sm"
+                                    onclick="atualizarDocumentoMotorista()">
+                                    Atualizar Visualização
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="documento-container print-section print-single-page" id="documentoMotoristaContent">
+                            <div class="text-center mb-3">
+                                <h4><strong>Vale Pallet</strong></h4>
+                            </div>
+
+                            <div class="mb-3">
+                                <p><strong>Cliente: {{ vale.cliente.nome|upper }}</strong></p>
+                                <p><strong>Transportadora: {{ vale.transportadora.nome|upper }}</strong></p>
+                            </div>
+
+                            <!-- MENSAGEM DE RECEBIMENTO NO TOPO -->
+                            <div class="border-top-bold pt-2 mb-3">
+                                <p class="text-center">Recebemos da empresa <strong>{{ vale.cliente.nome|upper
+                                        }}</strong></p>
+                                <p class="text-center">a quantidade de <strong>{{ vale.qtd_pbr }}</strong> paletas de
+                                    madeira no dia
+                                    <strong><span id="dataRecebimentoText">{{ vale.data_emissao|date:"d/m/Y"
+                                            }}</span></strong>.
+                                </p>
+                            </div>
+
+                            <!-- PRIMEIRA PARTE: PARA RETIRADA -->
+                            <div class="mt-4 p-2 border rounded">
+                                <p class="text-center mb-2"><strong>Para retirada, apresentar esse documento.</strong>
+                                </p>
+
+                                <div class="mt-3">
+                                    <p>Data da retirada: <span id="dataRetiradaText">_____/_____/_____</span></p>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <div class="col-6">
+                                        <div class="assinatura-line">
+                                            <p class="text-center">Assinatura do recebedor</p>
+                                            <p class="text-center mt-2">_________________________</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="assinatura-line">
+                                            <p class="text-center">Assinatura do motorista</p>
+                                            <p class="text-center mt-2">_________________________</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3 mt-4">
+                                <p><strong>{{ vale.transportadora.nome|upper }}</strong></p>
+                                <p>CNPJ: {{ vale.transportadora.cnpj|default:"00.000.000/0000-00" }}</p>
+                            </div>
+
+                            <div class="row mt-4">
+                                <div class="col-6">
+                                    <div class="assinatura-line">
+                                        <p class="text-center">Assinatura do recebedor</p>
+                                        <p class="text-center mt-2">_________________________</p>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="assinatura-line">
+                                        <p class="text-center">Assinatura do motorista</p>
+                                        <p class="text-center">RG: <span id="rgMotoristaDocText">{{
+                                                vale.motorista.rg|default:"__________________" }}</span></p>
+                                        <p class="text-center mt-2">Data de Retorno: <span
+                                                id="dataRetornoText">____/____/_____</span></p>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3" style="border-top: 1px solid black; padding-top: 10px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer no-print">
+                        <button class="btn btn-info" onclick="acionarImpressaoNativa('documentoMotoristaContent')">
+                            <i class="bi bi-printer me-1"></i> Imprimir
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
     </main>
 
+
+
+    <!-- Modal para Upload de Documento -->
+    <div class="modal fade" id="uploadDocumentoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" enctype="multipart/form-data"
+                    action="{% url 'valepallet_upload_documento' vale.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">Anexar Documento – Vale #{{ vale.numero_vale }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="arquivo" class="form-label">Selecione o arquivo (PDF, JPG, PNG):</label>
+                            <input class="form-control" type="file" name="arquivo" id="arquivo"
+                                accept=".pdf,.jpg,.jpeg,.png" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-upload"></i> Enviar
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <footer class="py-4 mt-auto bg-light" style="width: 100%;">
         <div style="width: 100%;">
@@ -340,6 +893,166 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/script.js' %}"></script>
 
+    <script>
+        // Classe para gerenciar a atualização de documentos
+        class DocumentUpdater {
+            constructor() {
+                this.documents = {
+                    'controle': {
+                        inputs: {
+                            rg: 'rgMotoristaInput',
+                            placa: 'placaVeiculoInput',
+                            responsavel: 'responsavelInput',
+                            retirada: 'retiradaCaixariaInput'
+                        },
+                        outputs: {
+                            rg: 'rgMotoristaText',
+                            placa: 'placaVeiculoText',
+                            responsavel: 'responsavelText',
+                            retirada: 'retiradaCaixariaText'
+                        },
+                        defaults: {
+                            rg: 'NÃO INFORMADO',
+                            placa: 'NÃO INFORMADA',
+                            retirada: '[A ser preenchido manualmente]'
+                        }
+                    },
+                    'motorista': {
+                        inputs: {
+                            rg: 'rgMotoristaDocInput',
+                            data: 'dataRetiradaInput'
+                        },
+                        outputs: {
+                            rg: 'rgMotoristaDocText',
+                            data: 'dataRetiradaText'
+                        },
+                        defaults: {
+                            rg: '__________________',
+                            data: '_____/_____/_____'
+                        }
+                    }
+                };
+            }
+
+            // Método para atualizar qualquer documento
+            updateDocument(documentType) {
+                const docConfig = this.documents[documentType];
+
+                if (!docConfig) {
+                    console.error('Tipo de documento não encontrado:', documentType);
+                    return;
+                }
+
+                // Atualizar todos os campos do documento
+                for (const [field, inputId] of Object.entries(docConfig.inputs)) {
+                    const inputElement = document.getElementById(inputId);
+                    const outputElement = document.getElementById(docConfig.outputs[field]);
+
+                    if (inputElement && outputElement) {
+                        const value = inputElement.value.trim();
+                        const defaultValue = docConfig.defaults[field] || '';
+                        outputElement.textContent = value || defaultValue;
+                    }
+                }
+            }
+
+            // Método para inicializar valores padrão
+            initializeDefaultValues() {
+                // Inicializar valores dos campos com dados do servidor
+                const serverData = {
+                    rg: "{{ vale.motorista.rg|default:'' }}",
+                    placa: "{{ vale.motorista.placa_veiculo|default:'' }}"
+                };
+
+                // Preencher campos de ambos os documentos
+                if (document.getElementById('rgMotoristaInput')) {
+                    document.getElementById('rgMotoristaInput').value = serverData.rg;
+                }
+                if (document.getElementById('placaVeiculoInput')) {
+                    document.getElementById('placaVeiculoInput').value = serverData.placa;
+                }
+                if (document.getElementById('rgMotoristaDocInput')) {
+                    document.getElementById('rgMotoristaDocInput').value = serverData.rg;
+                }
+
+                // Atualizar visualização inicial
+                this.updateDocument('controle');
+                this.updateDocument('motorista');
+            }
+        }
+
+        // Instanciar o gerenciador de documentos
+        const documentUpdater = new DocumentUpdater();
+
+        // Funções de interface (mantidas para compatibilidade com os onclick do HTML)
+        function atualizarDocumento() {
+            documentUpdater.updateDocument('controle');
+        }
+
+        function atualizarDocumentoMotorista() {
+            documentUpdater.updateDocument('motorista');
+        }
+
+        // Função para acionar impressão nativa
+        function acionarImpressaoNativa(elementId) {
+            // Primeiro, salvar o estado atual do body
+            const originalBodyContent = document.body.innerHTML;
+            const originalTitle = document.title;
+
+            // Obter o conteúdo a ser impresso
+            const printContent = document.getElementById(elementId).innerHTML;
+
+            // Substituir o body pelo conteúdo a ser impresso
+            document.body.innerHTML = printContent;
+            document.title = 'Documento - Vale #{{ vale.numero_vale }}';
+
+            // Acionar a impressão
+            window.print();
+
+            // Restaurar o conteúdo original do body e título
+            document.body.innerHTML = originalBodyContent;
+            document.title = originalTitle;
+
+            // Recarregar event listeners se necessário
+            window.dispatchEvent(new Event('load'));
+        }
+
+        // Inicializar a página
+        function initializePage() {
+            // Inicializar apenas se os elementos existirem (para usuários staff)
+            if (document.getElementById('rgMotoristaInput') || document.getElementById('rgMotoristaDocInput')) {
+                documentUpdater.initializeDefaultValues();
+            }
+
+            // Atualizar ano atual no footer
+            if (document.getElementById('current-year')) {
+                document.getElementById('current-year').textContent = new Date().getFullYear();
+            }
+        }
+
+        // Inicializar quando o DOM estiver carregado
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePage);
+        } else {
+            initializePage();
+        }
+
+        // Função para acionar impressão nativa (Ctrl+P)
+        function acionarImpressaoNativa() {
+            const eventoTeclado = new KeyboardEvent('keydown', {
+                key: 'p', ctrlKey: true, keyCode: 80, which: 80, bubbles: true, cancelable: true
+            });
+            document.dispatchEvent(eventoTeclado);
+            setTimeout(() => { window.print(); }, 100);
+        }
+
+        // Event listener simplificado
+        document.addEventListener('DOMContentLoaded', function () {
+            if (document.getElementById('current-year')) {
+                document.getElementById('current-year').textContent = new Date().getFullYear();
+            }
+        });
+    </script>
 </body>
 
 </html>

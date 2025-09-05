@@ -394,3 +394,21 @@ class Movimentacao(models.Model):
                 self.vale.estado = 'RETORNO'
             self.vale.save()
         super().save(*args, **kwargs)
+
+
+        # models.py
+
+class DocumentoVale(models.Model):
+    vale = models.ForeignKey(ValePallet, on_delete=models.CASCADE, related_name="documentos")
+    arquivo = models.FileField(upload_to="vales/documentos/")
+    nome_original = models.CharField(max_length=255)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    data_upload = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-data_upload"]
+        verbose_name = "Documento do Vale"
+        verbose_name_plural = "Documentos dos Vales"
+
+    def __str__(self):
+        return f"{self.nome_original} ({self.vale.numero_vale})"
